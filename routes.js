@@ -109,6 +109,57 @@ router.post('/park/add', csrfProtection, parkValidators,
     }
   }));
 
+router.get('/park/edit/:id(\\d+)', csrfProtection, asyncHandler(async (req, res) => {
+  const parkId = parseInt(req.params.id, 10);
+  const park = await db.Park.findByPk(parkId);
+  res.render('park-edit', {
+    title: 'Edit Park',
+    park,
+    csrfToken: req.csrfToken(),
+  });
+}));
+
+router.post('/park/edit/:id(\\d+)', csrfProtection, parkValidators,
+  asyncHandler(async (req, res) => {
+    const parkId = parseInt(req.params.id, 10);
+    const parkToUpdate = await db.Park.findByPk(parkId);
+
+    const {
+      parkName,
+      city,
+      provinceState,
+      country,
+      opened,
+      size,
+      description,
+    } = req.body;
+
+    const park = {
+      parkName,
+      city,
+      provinceState,
+      country,
+      opened,
+      size,
+      description,
+    };
+
+    const validatorErrors = validationResult(req);
+
+    if (validatorErrors.isEmpty()) {
+      await parkToUpdate.update(park);
+      res.redirect(`/park/${parkToUpdate.id}`);
+    } else {
+      const errors = validatorErrors.array().map((error) => error.msg);
+      res.render('park-edit', {
+        title: 'Edit Park',
+        park: { ...park, id: parkToUpdate.id },
+        errors,
+        csrfToken: req.csrfToken(),
+      });
+    }
+  }));
+
 if (environment !== 'production') {
   router.get('/error-test', () => {
     throw new Error('This is a test error.');

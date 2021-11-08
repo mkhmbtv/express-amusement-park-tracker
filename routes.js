@@ -160,6 +160,23 @@ router.post('/park/edit/:id(\\d+)', csrfProtection, parkValidators,
     }
   }));
 
+router.get('/park/delete/:id(\\d+)', csrfProtection, asyncHandler(async (req, res) => {
+  const parkId = parseInt(req.params.id, 10);
+  const park = await db.Park.findByPk(parkId);
+  res.render('park-delete', {
+    title: 'Delete Park',
+    park,
+    csrfToken: req.csrfToken(),
+  });
+}));
+
+router.post('/park/delete/:id(\\d+)', csrfProtection, asyncHandler(async (req, res) => {
+  const parkId = parseInt(req.params.id, 10);
+  const park = await db.Park.findByPk(parkId);
+  await park.destroy();
+  res.redirect('/parks');
+}));
+
 if (environment !== 'production') {
   router.get('/error-test', () => {
     throw new Error('This is a test error.');
